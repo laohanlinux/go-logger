@@ -143,9 +143,12 @@ func Info(v ...interface{}) {
 	if dailyRolling {
 		fileCheck()
 	}
+	fmt.Println("kkkk")
+
 	defer catchError()
 	logObj.mu.RLock()
 	defer logObj.mu.RUnlock()
+	fmt.Println("KKKKKKKKKKKkk")
 	if logLevel <= INFO {
 		logObj.lg.Output(2, fmt.Sprintln("info", v))
 		console("info", v)
