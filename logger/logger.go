@@ -185,6 +185,9 @@ func Fatal(v ...interface{}) {
 	defer catchError()
 	logObj.mu.RLock()
 	defer logObj.mu.RUnlock()
+	defer func() {
+		os.Exit(-127)
+	}()
 	if logLevel <= FATAL {
 		logObj.lg.Output(2, fmt.Sprintln("fatal", v))
 		console("fatal", v)
