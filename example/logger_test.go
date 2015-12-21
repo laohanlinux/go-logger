@@ -1,7 +1,7 @@
 package example
 
 import (
-	"github.com/donnie4w/go-logger/logger"
+	"github.com/laohanlinux/go-logger/logger"
 	"runtime"
 	"strconv"
 	"testing"
@@ -36,7 +36,7 @@ func Test(t *testing.T) {
 
 	//指定日志级别  ALL，DEBUG，INFO，WARN，ERROR，FATAL，OFF 级别由低到高
 	//一般习惯是测试阶段为debug，生成环境为info以上
-	logger.SetLevel(logger.ERROR)
+	logger.SetLevel(logger.DEBUG)
 
 	for i := 10000; i > 0; i-- {
 		go log(i)

@@ -14,20 +14,25 @@ const (
 	_VER string = "1.0.0"
 )
 
+// LEVEL define logger level
 type LEVEL int32
 
 var logLevel LEVEL = 1
 var maxFileSize int64
 var maxFileCount int32
+
 var dailyRolling bool = true
 var consoleAppender bool = true
 var RollingFile bool = false
 var logObj *_FILE
 
+// DATEFORMAT is logger file format
 const DATEFORMAT = "2006-01-02"
 
+// UINT be defined int64 type
 type UNIT int64
 
+// every logger file size
 const (
 	_       = iota
 	KB UNIT = 1 << (iota * 10)
@@ -36,6 +41,7 @@ const (
 	TB
 )
 
+// Logger level
 const (
 	ALL LEVEL = iota
 	DEBUG
@@ -46,6 +52,7 @@ const (
 	OFF
 )
 
+// _FILE is the logger file struct
 type _FILE struct {
 	dir      string
 	filename string
@@ -60,14 +67,20 @@ type _FILE struct {
 func init() {
 	SetRollingDaily("log", "application.log")
 }
+
+// SetConsole use to control logger output
+// false: can not output the logger to terminate,
+// true: display the logger into the terminate
 func SetConsole(isConsole bool) {
 	consoleAppender = isConsole
 }
 
+// SetLevel set logger level
 func SetLevel(_level LEVEL) {
 	logLevel = _level
 }
 
+// SetRollingFile split the logger file by fileSize
 func SetRollingFile(fileDir, fileName string, maxNumber int32, maxSize int64, _unit UNIT) {
 	maxFileCount = maxNumber
 	maxFileSize = maxSize * int64(_unit)
@@ -92,6 +105,7 @@ func SetRollingFile(fileDir, fileName string, maxNumber int32, maxSize int64, _u
 	go fileMonitor()
 }
 
+// SetRollingDaily splits the logger file by date format
 func SetRollingDaily(fileDir, fileName string) {
 	RollingFile = false
 	dailyRolling = true
@@ -129,6 +143,7 @@ func catchError() {
 	}
 }
 
+// Debug Level Logger
 func Debug(v ...interface{}) {
 	if dailyRolling {
 		fileCheck()
@@ -142,6 +157,8 @@ func Debug(v ...interface{}) {
 		console("debug", v)
 	}
 }
+
+// Info Level Logger
 func Info(v ...interface{}) {
 	if dailyRolling {
 		fileCheck()
@@ -150,10 +167,13 @@ func Info(v ...interface{}) {
 	logObj.mu.RLock()
 	defer logObj.mu.RUnlock()
 	if logLevel <= INFO {
-		logObj.lg.Output(2, fmt.Sprintln("info", v))
+		//	logObj.lg.Output(2, fmt.Sprintln("info", v))
+		logObj.lg.Output(2, fmt.Sprintf("%v", v))
 		console("info", v)
 	}
 }
+
+// Warn Level Logger
 func Warn(v ...interface{}) {
 	if dailyRolling {
 		fileCheck()
@@ -166,6 +186,8 @@ func Warn(v ...interface{}) {
 		console("warn", v)
 	}
 }
+
+// Error Level Logger
 func Error(v ...interface{}) {
 	if dailyRolling {
 		fileCheck()
@@ -178,6 +200,9 @@ func Error(v ...interface{}) {
 		console("error", v)
 	}
 }
+
+// Fatal Level Logger
+// the level will cause application exit
 func Fatal(v ...interface{}) {
 	if dailyRolling {
 		fileCheck()
