@@ -167,8 +167,7 @@ func Info(v ...interface{}) {
 	logObj.mu.RLock()
 	defer logObj.mu.RUnlock()
 	if logLevel <= INFO {
-		//	logObj.lg.Output(2, fmt.Sprintln("info", v))
-		logObj.lg.Output(2, fmt.Sprintf("%v", v))
+		logObj.lg.Output(2, fmt.Sprintln("info", v))
 		console("info", v)
 	}
 }
