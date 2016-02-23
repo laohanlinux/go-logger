@@ -16,6 +16,7 @@ func log(i int) {
 	logger.Error(strconv.Itoa(i))
 	logger.Debug(strconv.Itoa(i))
 	logger.Debug(nil)
+	logger.Info("canot ")
 	//logger.Fatal("Fatal>>>>>>>>>>>>>>>>>>>>>>>>>" + strconv.Itoa(i))
 }
 
