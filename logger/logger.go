@@ -21,15 +21,17 @@ var logLevel LEVEL = 1
 var maxFileSize int64
 var maxFileCount int32
 
-var dailyRolling bool = true
-var consoleAppender bool = true
-var RollingFile bool = false
-var logObj *_FILE
+var dailyRolling = true
+var consoleAppender = true
+
+// RollingFile ...
+var RollingFile = false
+var logObj *FILE
 
 // DATEFORMAT is logger file format
 const DATEFORMAT = "2006-01-02"
 
-// UINT be defined int64 type
+// UNIT be defined int64 type
 type UNIT int64
 
 // every logger file size
@@ -52,8 +54,8 @@ const (
 	OFF
 )
 
-// _FILE is the logger file struct
-type _FILE struct {
+// FILE is the logger file struct
+type FILE struct {
 	dir      string
 	filename string
 	_suffix  int
@@ -81,12 +83,12 @@ func SetLevel(_level LEVEL) {
 }
 
 // SetRollingFile split the logger file by fileSize
-func SetRollingFile(fileDir, fileName string, maxNumber int32, maxSize int64, _unit UNIT) {
+func SetRollingFile(fileDir, fileName string, maxNumber int32, maxSize int64, _unit UNIT) error {
 	maxFileCount = maxNumber
 	maxFileSize = maxSize * int64(_unit)
 	RollingFile = true
 	dailyRolling = false
-	logObj = &_FILE{dir: fileDir, filename: fileName, isCover: false, mu: new(sync.RWMutex)}
+	logObj = &FILE{dir: fileDir, filename: fileName, isCover: false, mu: new(sync.RWMutex)}
 	logObj.mu.Lock()
 	defer logObj.mu.Unlock()
 	for i := 1; i <= int(maxNumber); i++ {
@@ -96,30 +98,39 @@ func SetRollingFile(fileDir, fileName string, maxNumber int32, maxSize int64, _u
 			break
 		}
 	}
+	var err error
 	if !logObj.isMustRename() {
-		logObj.logfile, _ = os.OpenFile(fileDir+"/"+fileName, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0777)
+		logObj.logfile, err = os.OpenFile(fileDir+"/"+fileName, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0777)
+		if err != nil {
+			return err
+		}
 		logObj.lg = log.New(logObj.logfile, "\n", log.Ldate|log.Ltime|log.Lshortfile)
 	} else {
 		logObj.rename()
 	}
 	go fileMonitor()
+	return nil
 }
 
 // SetRollingDaily splits the logger file by date format
-func SetRollingDaily(fileDir, fileName string) {
+func SetRollingDaily(fileDir, fileName string) error {
 	RollingFile = false
 	dailyRolling = true
 	t, _ := time.Parse(DATEFORMAT, time.Now().Format(DATEFORMAT))
-	logObj = &_FILE{dir: fileDir, filename: fileName, _date: &t, isCover: false, mu: new(sync.RWMutex)}
+	logObj = &FILE{dir: fileDir, filename: fileName, _date: &t, isCover: false, mu: new(sync.RWMutex)}
 	logObj.mu.Lock()
 	defer logObj.mu.Unlock()
-
+	var err error
 	if !logObj.isMustRename() {
-		logObj.logfile, _ = os.OpenFile(fileDir+"/"+fileName, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0777)
+		logObj.logfile, err = os.OpenFile(fileDir+"/"+fileName, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0777)
+		if err != nil {
+			return err
+		}
 		logObj.lg = log.New(logObj.logfile, "\n", log.Ldate|log.Ltime|log.Lshortfile)
 	} else {
 		logObj.rename()
 	}
+	return nil
 }
 
 func console(s ...interface{}) {
@@ -153,7 +164,7 @@ func Debug(v ...interface{}) {
 	defer logObj.mu.RUnlock()
 
 	if logLevel <= DEBUG {
-		logObj.lg.Output(2, fmt.Sprintln("debug", v))
+		logObj.lg.Output(2, formatOutStr("[debug] ", v))
 		console("debug", v)
 	}
 }
@@ -167,7 +178,7 @@ func Info(v ...interface{}) {
 	logObj.mu.RLock()
 	defer logObj.mu.RUnlock()
 	if logLevel <= INFO {
-		logObj.lg.Output(2, fmt.Sprintln("info", v))
+		logObj.lg.Output(2, formatOutStr("[info] ", v))
 		console("info", v)
 	}
 }
@@ -181,7 +192,7 @@ func Warn(v ...interface{}) {
 	logObj.mu.RLock()
 	defer logObj.mu.RUnlock()
 	if logLevel <= WARN {
-		logObj.lg.Output(2, fmt.Sprintln("warn", v))
+		logObj.lg.Output(2, formatOutStr("[warn] ", v))
 		console("warn", v)
 	}
 }
@@ -195,7 +206,7 @@ func Error(v ...interface{}) {
 	logObj.mu.RLock()
 	defer logObj.mu.RUnlock()
 	if logLevel <= ERROR {
-		logObj.lg.Output(2, fmt.Sprintln("error", v))
+		logObj.lg.Output(2, formatOutStr("[error] ", v))
 		console("error", v)
 	}
 }
@@ -213,12 +224,12 @@ func Fatal(v ...interface{}) {
 		os.Exit(-127)
 	}()
 	if logLevel <= FATAL {
-		logObj.lg.Output(2, fmt.Sprintln("fatal", v))
+		logObj.lg.Output(2, formatOutStr("[fatal] ", v))
 		console("fatal", v)
 	}
 }
 
-func (f *_FILE) isMustRename() bool {
+func (f *FILE) isMustRename() bool {
 	if dailyRolling {
 		t, _ := time.Parse(DATEFORMAT, time.Now().Format(DATEFORMAT))
 		if t.After(*f._date) {
@@ -234,7 +245,7 @@ func (f *_FILE) isMustRename() bool {
 	return false
 }
 
-func (f *_FILE) rename() {
+func (f *FILE) rename() {
 	if dailyRolling {
 		fn := f.dir + "/" + f.filename + "." + f._date.Format(DATEFORMAT)
 		if !isExist(fn) && f.isMustRename() {
@@ -255,11 +266,11 @@ func (f *_FILE) rename() {
 	}
 }
 
-func (f *_FILE) nextSuffix() int {
+func (f *FILE) nextSuffix() int {
 	return int(f._suffix%int(maxFileCount) + 1)
 }
 
-func (f *_FILE) coverNextOne() {
+func (f *FILE) coverNextOne() {
 	f._suffix = f.nextSuffix()
 	if f.logfile != nil {
 		f.logfile.Close()
@@ -294,6 +305,15 @@ func fileMonitor() {
 			fileCheck()
 		}
 	}
+}
+
+func formatOutStr(logMsg ...interface{}) string {
+	logStr := logMsg[0].(string)
+	userMsg := logMsg[1].([]interface{})
+	for _, v := range userMsg {
+		logStr = fmt.Sprintf("%v%v", logStr, v)
+	}
+	return logStr
 }
 
 func fileCheck() {

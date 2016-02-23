@@ -1,26 +1,29 @@
 package example
 
 import (
-	"github.com/laohanlinux/go-logger/logger"
+	"os"
 	"runtime"
 	"strconv"
 	"testing"
-	"time"
+
+	logger "github.com/laohanlinux/go-logger/logger"
 )
 
 func log(i int) {
-	logger.Debug("Debug>>>>>>>>>>>>>>>>>>>>>>" + strconv.Itoa(i))
-	logger.Info("Info>>>>>>>>>>>>>>>>>>>>>>>>>" + strconv.Itoa(i))
-	logger.Warn("Warn>>>>>>>>>>>>>>>>>>>>>>>>>" + strconv.Itoa(i))
-	logger.Error("Error>>>>>>>>>>>>>>>>>>>>>>>>>" + strconv.Itoa(i))
-	logger.Fatal("Fatal>>>>>>>>>>>>>>>>>>>>>>>>>" + strconv.Itoa(i))
+	//	logger.Debug("Debug>>>>>>>>>>>>>>>>>>>>>>" + strconv.Itoa(i))
+	logger.Info(strconv.Itoa(i))
+	logger.Warn(strconv.Itoa(i))
+	logger.Error(strconv.Itoa(i))
+	logger.Debug(strconv.Itoa(i))
+	logger.Debug(nil)
+	//logger.Fatal("Fatal>>>>>>>>>>>>>>>>>>>>>>>>>" + strconv.Itoa(i))
 }
 
 func Test(t *testing.T) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	//指定是否控制台打印，默认为true
-	logger.SetConsole(true)
+	logger.SetConsole(false)
 	//指定日志文件备份方式为文件大小的方式
 	//第一个参数为日志文件存放目录
 	//第二个参数为日志文件命名
@@ -32,15 +35,22 @@ func Test(t *testing.T) {
 	//指定日志文件备份方式为日期的方式
 	//第一个参数为日志文件存放目录
 	//第二个参数为日志文件命名
-	logger.SetRollingDaily("d:/logtest", "test.log")
+	logSavePath := "../example"
+	stat, err := os.Stat(logSavePath)
+	if err != nil {
+		panic(err)
+	}
+	if !stat.IsDir() {
+		panic("example is not a dir")
+	}
+	logger.SetRollingDaily(logSavePath, "test.log")
 
 	//指定日志级别  ALL，DEBUG，INFO，WARN，ERROR，FATAL，OFF 级别由低到高
 	//一般习惯是测试阶段为debug，生成环境为info以上
 	logger.SetLevel(logger.DEBUG)
 
-	for i := 10000; i > 0; i-- {
-		go log(i)
-		time.Sleep(1000 * time.Millisecond)
+	for i := 100; i > 0; i-- {
+		log(i)
 	}
-	time.Sleep(15 * time.Second)
+	//time.Sleep(15 * time.Second)
 }
