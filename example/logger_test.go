@@ -20,7 +20,15 @@ func log(i int) {
 	//logger.Fatal("Fatal>>>>>>>>>>>>>>>>>>>>>>>>>" + strconv.Itoa(i))
 }
 
-func Test(t *testing.T) {
+func TestNil(t *testing.T) {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+	logger.SetConsole(true)
+	for i := 0; i < 1024; i++ {
+		logger.Info(i)
+	}
+}
+
+func TestAll(t *testing.T) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	//指定是否控制台打印，默认为true

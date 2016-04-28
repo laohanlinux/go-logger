@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"runtime/debug"
 	"strconv"
 	"sync"
 	"time"
@@ -133,27 +134,6 @@ func SetRollingDaily(fileDir, fileName string) error {
 	return nil
 }
 
-func console(s ...interface{}) {
-	if consoleAppender {
-		_, file, line, _ := runtime.Caller(2)
-		short := file
-		for i := len(file) - 1; i > 0; i-- {
-			if file[i] == '/' {
-				short = file[i+1:]
-				break
-			}
-		}
-		file = short
-		log.Println(file+":"+strconv.Itoa(line), s)
-	}
-}
-
-func catchError() {
-	if err := recover(); err != nil {
-		log.Println("err", err)
-	}
-}
-
 // Debug Level Logger
 func Debug(v ...interface{}) {
 	if dailyRolling {
@@ -164,8 +144,10 @@ func Debug(v ...interface{}) {
 	defer logObj.mu.RUnlock()
 
 	if logLevel <= DEBUG {
-		logObj.lg.Output(2, formatOutStr("[debug] ", v))
-		console("debug", v)
+		if logObj.lg != nil {
+			logObj.lg.Output(2, formatOutStr("[debug] ", v))
+		}
+		console(formatOutStr("[debug] ", v))
 	}
 }
 
@@ -174,12 +156,16 @@ func Info(v ...interface{}) {
 	if dailyRolling {
 		fileCheck()
 	}
+	// fmt.Printf("%#v\r\n", logObj)
 	defer catchError()
 	logObj.mu.RLock()
 	defer logObj.mu.RUnlock()
+
 	if logLevel <= INFO {
-		logObj.lg.Output(2, formatOutStr("[info] ", v))
-		console("info", v)
+		if logObj.lg != nil {
+			logObj.lg.Output(2, formatOutStr("[info] ", v))
+		}
+		console(formatOutStr("[info] ", v))
 	}
 }
 
@@ -192,8 +178,10 @@ func Warn(v ...interface{}) {
 	logObj.mu.RLock()
 	defer logObj.mu.RUnlock()
 	if logLevel <= WARN {
-		logObj.lg.Output(2, formatOutStr("[warn] ", v))
-		console("warn", v)
+		if logObj.lg != nil {
+			logObj.lg.Output(2, formatOutStr("[warn] ", v))
+		}
+		console(formatOutStr("[warn] ", v))
 	}
 }
 
@@ -206,8 +194,10 @@ func Error(v ...interface{}) {
 	logObj.mu.RLock()
 	defer logObj.mu.RUnlock()
 	if logLevel <= ERROR {
-		logObj.lg.Output(2, formatOutStr("[error] ", v))
-		console("error", v)
+		if logObj.lg != nil {
+			logObj.lg.Output(2, formatOutStr("[error] ", v))
+		}
+		console(formatOutStr("[error] ", v))
 	}
 }
 
@@ -224,8 +214,10 @@ func Fatal(v ...interface{}) {
 		os.Exit(-127)
 	}()
 	if logLevel <= FATAL {
-		logObj.lg.Output(2, formatOutStr("[fatal] ", v))
-		console("fatal", v)
+		if logObj.lg != nil {
+			logObj.lg.Output(2, formatOutStr("[fatal] ", v))
+		}
+		console(formatOutStr("[fatal] ", v))
 	}
 }
 
@@ -326,5 +318,26 @@ func fileCheck() {
 		logObj.mu.Lock()
 		defer logObj.mu.Unlock()
 		logObj.rename()
+	}
+}
+
+func console(s string) {
+	if consoleAppender {
+		_, file, line, _ := runtime.Caller(2)
+		short := file
+		for i := len(file) - 1; i > 0; i-- {
+			if file[i] == '/' {
+				short = file[i+1:]
+				break
+			}
+		}
+		file = short
+		log.Println(file+":"+strconv.Itoa(line), s)
+	}
+}
+
+func catchError() {
+	if err := recover(); err != nil {
+		debug.PrintStack()
 	}
 }
