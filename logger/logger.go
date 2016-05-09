@@ -303,7 +303,7 @@ func formatOutStr(logMsg ...interface{}) string {
 	logStr := logMsg[0].(string)
 	userMsg := logMsg[1].([]interface{})
 	for _, v := range userMsg {
-		logStr = fmt.Sprintf("%v%v", logStr, v)
+		logStr = fmt.Sprintf("%v%v ", logStr, v)
 	}
 	return logStr
 }

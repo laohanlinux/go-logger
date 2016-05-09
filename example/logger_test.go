@@ -25,6 +25,7 @@ func TestNil(t *testing.T) {
 	logger.SetConsole(true)
 	for i := 0; i < 1024; i++ {
 		logger.Info(i)
+		logger.Info(i, i+1)
 	}
 }
 
