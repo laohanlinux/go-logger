@@ -151,6 +151,22 @@ func Debug(v ...interface{}) {
 	}
 }
 
+func Debugf(format string, v ... interface{}) {
+	if dailyRolling {
+		fileCheck()
+	}
+	defer catchError()
+	logObj.mu.RLock()
+	defer logObj.mu.RUnlock()
+
+	if logLevel <= DEBUG {
+		if logObj.lg != nil {
+			logObj.lg.Output(2, fmt.Sprintf("[debug] " + format, v ...))
+		}
+		console(fmt.Sprintf("[debug] " + format, v ...))
+	}
+}
+
 // Info Level Logger
 func Info(v ...interface{}) {
 	if dailyRolling {
@@ -169,6 +185,25 @@ func Info(v ...interface{}) {
 	}
 }
 
+// Info Level Logger
+func Infof(format string, v ...interface{}) {
+	if dailyRolling {
+		fileCheck()
+	}
+	// fmt.Printf("%#v\r\n", logObj)
+	defer catchError()
+	logObj.mu.RLock()
+	defer logObj.mu.RUnlock()
+
+	if logLevel <= INFO {
+		if logObj.lg != nil {
+			logObj.lg.Output(2, fmt.Sprintf("[info] " + format, v ...))
+		}
+		console(fmt.Sprintf("[info] " + format, v ...))
+	}
+}
+
+
 // Warn Level Logger
 func Warn(v ...interface{}) {
 	if dailyRolling {
@@ -185,6 +220,22 @@ func Warn(v ...interface{}) {
 	}
 }
 
+// Warn Level Logger
+func Warnf(format string, v ...interface{}) {
+	if dailyRolling {
+		fileCheck()
+	}
+	defer catchError()
+	logObj.mu.RLock()
+	defer logObj.mu.RUnlock()
+	if logLevel <= WARN {
+		if logObj.lg != nil {
+			logObj.lg.Output(2, fmt.Sprintf("[warn] " + format, v ...))
+		}
+		console(fmt.Sprintf("[warn] " + format, v ...))
+	}
+}
+
 // Error Level Logger
 func Error(v ...interface{}) {
 	if dailyRolling {
@@ -198,6 +249,22 @@ func Error(v ...interface{}) {
 			logObj.lg.Output(2, formatOutStr("[error] ", v))
 		}
 		console(formatOutStr("[error] ", v))
+	}
+}
+
+// Error Level Logger
+func Errorf(format string, v ...interface{}) {
+	if dailyRolling {
+		fileCheck()
+	}
+	defer catchError()
+	logObj.mu.RLock()
+	defer logObj.mu.RUnlock()
+	if logLevel <= ERROR {
+		if logObj.lg != nil {
+			logObj.lg.Output(2, fmt.Sprintf("[error] " + format, v ...))
+		}
+		console(fmt.Sprintf("[error] " + format, v ...))
 	}
 }
 
@@ -220,6 +287,27 @@ func Fatal(v ...interface{}) {
 		console(formatOutStr("[fatal] ", v))
 	}
 }
+
+// Fatal Level Logger
+// the level will cause application exit
+func Fatalf(format string, v ...interface{}) {
+	if dailyRolling {
+		fileCheck()
+	}
+	defer catchError()
+	logObj.mu.RLock()
+	defer logObj.mu.RUnlock()
+	defer func() {
+		os.Exit(-127)
+	}()
+	if logLevel <= FATAL {
+		if logObj.lg != nil {
+			logObj.lg.Output(2, fmt.Sprintf("[fatal] " + format, v ...))
+		}
+		console(fmt.Sprintf("[fatal] " + format, v ...))
+	}
+}
+
 
 func (f *FILE) isMustRename() bool {
 	if dailyRolling {

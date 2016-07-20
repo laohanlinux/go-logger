@@ -15,8 +15,10 @@ func log(i int) {
 	logger.Warn(strconv.Itoa(i))
 	logger.Error(strconv.Itoa(i))
 	logger.Debug(strconv.Itoa(i))
+	logger.Debugf("%s", strconv.Itoa(i))
 	logger.Debug(nil)
 	logger.Info("canot ")
+	logger.Infof("%s", "你好啊")
 	//logger.Fatal("Fatal>>>>>>>>>>>>>>>>>>>>>>>>>" + strconv.Itoa(i))
 }
 
